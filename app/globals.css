@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* Color tokens — light defaults; dark values overridden in [data-theme="dark"] below */
+  --color-bg: #fafafa;
+  --color-bg-2: #f3f3f1;
+  --color-fg: #0a0a0a;
+  --color-fg-2: #404040;
+  --color-fg-3: #888888;
+  --color-line: #0a0a0a;
+  --color-line-soft: rgb(10 10 10 / 0.12);
+  --color-hover: rgb(10 10 10 / 0.04);
+
+  /* Fonts — populated from next/font CSS variables (set on <html>) */
+  --font-serif: var(--font-newsreader), "Times New Roman", Georgia, serif;
+  --font-sans: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Layout */
+  --container-site: 1440px;
+  --spacing-gutter: 28px;
+
+  /* Easing + animations */
+  --ease-design: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --animate-page-fade: fadeIn 0.4s ease-out;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-so-rise: so-rise 0.45s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  --color-bg: #0a0a0a;
+  --color-bg-2: #161616;
+  --color-fg: #fafafa;
+  --color-fg-2: #b8b8b8;
+  --color-fg-3: #707070;
+  --color-line: #fafafa;
+  --color-line-soft: rgb(250 250 250 / 0.14);
+  --color-hover: rgb(250 250 250 / 0.06);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes so-rise {
+  from { opacity: 0; transform: translate(-50%, 24px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Base — port of body/html rules from prototype */
+html, body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background 240ms var(--ease-design), color 240ms var(--ease-design);
+}
+
+body {
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: var(--color-fg);
+  color: var(--color-bg);
+}
+
+/* Hide the design-package "screen label" attribute helper if it ever shows */
+[data-screen-label] { /* no-op */ }
