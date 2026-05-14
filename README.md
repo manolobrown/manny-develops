@@ -50,14 +50,27 @@ public/
   headshot.jpg
 ```
 
+## Backend wiring — environment variables
+
+Copy `.env.example` → `.env.local` and fill in the values for the services you've set up. The site **runs without any of these** — every form falls back to a console-warn dev mode that shows the "thanks" UI without delivering. Wire them in this order:
+
+| Var | Purpose | Service to sign up for |
+|---|---|---|
+| `RESEND_API_KEY`, `INQUIRY_FROM_EMAIL`, `INQUIRY_TO_EMAIL` | Contact form delivery | [Resend](https://resend.com) — verify `mannydevelops.com` first |
+| `KIT_API_KEY` + four `KIT_FORM_*_ID` | Email lead-magnet captures (presets, pricing-guide, newsletter, sticky) | [Kit / ConvertKit](https://app.kit.com) — create three forms with auto-responders |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Contact spam protection (optional) | [Cloudflare Turnstile](https://dash.cloudflare.com/) |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Shop checkout (Phase 2 — not wired yet) | [Stripe](https://stripe.com) — Payment Links for each SKU |
+
+`SITE_URL` defaults to `https://mannydevelops.com` — override via `NEXT_PUBLIC_SITE_URL` for preview deploys.
+
 ## Status — what isn't wired yet
 
-The site renders the full design (all 9 routes, light + dark, responsive). Several flows are intentionally front-end only and need a backend pass before launch:
+The site renders the full design (all 9 routes, light + dark, responsive). Forms render with full validation + success/error UI, but actual delivery is opt-in via the env vars above. Specifically:
 
-- **Inquiry form** (`/contact`) — no submission target
-- **Lead-magnet email capture** (Home + Services pricing PDF + sticky bottom strip) — no list backend
-- **Scheduler** (`/contact`) — visual mock; needs a real Calendly / Cal.com embed
-- **Shop checkout** (`/shop`) — print + preset purchase isn't wired to Stripe / Shopify
+- **Inquiry form** (`/contact`) — wired through a Server Action; delivers via Resend when `RESEND_API_KEY` is set. Without it, requests log to the dev console and show the success UI.
+- **Lead-magnet email capture** (Home + Services pricing PDF + Journal newsletter + sticky bottom strip) — all four post to `/api/subscribe`, which forwards to Kit when `KIT_API_KEY` + the appropriate `KIT_FORM_*_ID` are set.
+- **Scheduler** (`/contact`) — visual mock; needs a real Cal.com / Calendly embed (Phase 2A in the roadmap).
+- **Shop checkout** (`/shop`) — print + preset CTAs are visual; need Stripe Payment Links + a webhook for digital fulfillment (Phase 2B).
 
 ## Placeholder content flagged for review
 

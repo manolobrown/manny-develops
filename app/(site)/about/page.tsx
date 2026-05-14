@@ -2,11 +2,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
+import { JsonLd } from "@/components/JsonLd";
 import { IMG } from "@/lib/content";
+import { metadataFor } from "@/lib/site";
+import { personAndBusinessSchema, webPageSchema, breadcrumbsSchema } from "@/lib/seo";
+
+export const metadata = metadataFor("/about");
 
 export default function AboutPage() {
   return (
     <div className="animate-page-fade">
+      <JsonLd
+        data={[
+          webPageSchema("/about"),
+          breadcrumbsSchema("/about"),
+          ...personAndBusinessSchema(),
+        ]}
+      />
       <div className="mx-auto w-full max-w-site px-(--spacing-gutter)">
         {/* Hero */}
         <section className="grid grid-cols-[1.1fr_1fr] items-end gap-16 py-16 max-[880px]:grid-cols-1 max-[880px]:gap-8">

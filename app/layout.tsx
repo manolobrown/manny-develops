@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Manrope, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SITE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -26,15 +27,29 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Manny Develops · Manuel Peña — Photographer, NYC",
-  description:
-    "Photographer in Manhattan, NYC. Weddings, portraits, fitness, editorial. Pictures that last.",
-  openGraph: {
-    title: "Manny Develops · Manuel Peña — Photographer, NYC",
-    description:
-      "Photographer in Manhattan, NYC. Weddings, portraits, fitness, editorial.",
-    type: "website",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Manny Develops · Manuel Peña — Photographer, NYC",
+    template: "%s",
   },
+  description: SITE.description,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.fullName, url: SITE_URL }],
+  creator: SITE.fullName,
+  publisher: SITE.name,
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    title: "Manny Develops · Manuel Peña — Photographer, NYC",
+    description: SITE.description,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Manny Develops · Manuel Peña — Photographer, NYC",
+    description: SITE.description,
+  },
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({

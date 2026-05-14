@@ -1,6 +1,11 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
+import { JsonLd } from "@/components/JsonLd";
+import { metadataFor } from "@/lib/site";
+import { webPageSchema, breadcrumbsSchema } from "@/lib/seo";
+
+export const metadata = metadataFor("/services");
 
 type Pkg = {
   name: string;
@@ -71,6 +76,7 @@ const ADDONS: [string, string][] = [
 export default function ServicesPage() {
   return (
     <div className="mx-auto w-full max-w-site px-(--spacing-gutter) animate-page-fade">
+      <JsonLd data={[webPageSchema("/services"), breadcrumbsSchema("/services")]} />
       <header className="border-b border-line-soft py-9">
         <div className="grid grid-cols-[1.4fr_1fr] items-end gap-16 max-[880px]:grid-cols-1 max-[880px]:gap-6">
           <div>
@@ -189,6 +195,7 @@ export default function ServicesPage() {
               ))}
             </ul>
             <EmailCaptureForm
+              source="pricing-guide"
               cta="Send me the guide ↗"
               tinyLabel="PDF · 16 pages · 2.4 MB · Updated April 2026"
             />

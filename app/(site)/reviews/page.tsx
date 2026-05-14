@@ -1,10 +1,22 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
+import { JsonLd } from "@/components/JsonLd";
 import { REVIEWS } from "@/lib/content";
+import { metadataFor } from "@/lib/site";
+import { webPageSchema, breadcrumbsSchema, reviewsSchema } from "@/lib/seo";
+
+export const metadata = metadataFor("/reviews");
 
 export default function ReviewsPage() {
   return (
     <div className="animate-page-fade">
+      <JsonLd
+        data={[
+          webPageSchema("/reviews"),
+          breadcrumbsSchema("/reviews"),
+          ...reviewsSchema(),
+        ]}
+      />
       <div className="mx-auto w-full max-w-site px-(--spacing-gutter)">
         {/* Header */}
         <section className="grid grid-cols-[1.4fr_1fr] items-end gap-12 border-b border-line-soft py-12 max-[880px]:grid-cols-1 max-[880px]:gap-6">

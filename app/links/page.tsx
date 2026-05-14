@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { JsonLd } from "@/components/JsonLd";
 import { IMG } from "@/lib/content";
+import { metadataFor } from "@/lib/site";
+import { webPageSchema } from "@/lib/seo";
+
+export const metadata = metadataFor("/links");
 
 type Tile = {
   href: string;
@@ -22,6 +27,7 @@ const TILES: Tile[] = [
 export default function LinksPage() {
   return (
     <div className="animate-page-fade">
+      <JsonLd data={webPageSchema("/links")} />
       <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-bg px-5 pb-16 pt-12 before:absolute before:inset-0 before:z-0 before:bg-[radial-gradient(800px_400px_at_50%_-100px,var(--color-bg-2)_0%,transparent_70%)] before:content-['']">
         <div className="relative z-10 flex w-full max-w-[460px] flex-col items-center gap-1">
           <div className="h-24 w-24 overflow-hidden rounded-full border border-line-soft">

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
 
 export function StickyOptIn() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (dismissed) return;
@@ -20,10 +22,22 @@ export function StickyOptIn() {
 
   const handle = (e: FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setTimeout(() => setDismissed(true), 1400);
-    }
+    if (!email) return;
+    setError(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, source: "sticky" }),
+        });
+        if (!res.ok) throw new Error("subscribe failed");
+        setSubmitted(true);
+        setTimeout(() => setDismissed(true), 1400);
+      } catch {
+        setError("Couldn't subscribe — try again later.");
+      }
+    });
   };
 
   if (dismissed || !visible) return null;
@@ -51,18 +65,25 @@ export function StickyOptIn() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={pending}
             className="w-[180px] border-none bg-transparent font-sans text-[13px] text-bg outline-none placeholder:text-[rgb(255_255_255_/_0.5)] max-[880px]:w-full max-[880px]:min-w-0"
           />
           <button
             type="submit"
-            className="whitespace-nowrap rounded-full border-none bg-bg px-3.5 py-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-fg"
+            disabled={pending}
+            className="whitespace-nowrap rounded-full border-none bg-bg px-3.5 py-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-fg disabled:opacity-50"
           >
-            Send it ↗
+            {pending ? "Sending…" : "Send it ↗"}
           </button>
         </form>
       ) : (
         <span className="px-3.5 py-2 font-serif text-[16px] italic">
           ✓ On its way — check your inbox.
+        </span>
+      )}
+      {error && (
+        <span className="px-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#ffb4a8]">
+          {error}
         </span>
       )}
       <button

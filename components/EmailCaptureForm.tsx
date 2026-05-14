@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 
 type Variant = "dark" | "light";
+type Source = "presets" | "pricing-guide" | "newsletter" | "sticky";
 
 type Props = {
+  source: Source;
   variant?: Variant;
   cta: string;
   placeholder?: string;
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export function EmailCaptureForm({
+  source,
   variant = "light",
   cta,
   placeholder = "your@email.com",
@@ -21,10 +24,26 @@ export function EmailCaptureForm({
 }: Props) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const handle = (e: FormEvent) => {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    if (!email) return;
+    setError(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, source }),
+        });
+        if (!res.ok) throw new Error("subscribe failed");
+        setSubmitted(true);
+      } catch {
+        setError("Couldn't subscribe — try again in a moment.");
+      }
+    });
   };
 
   if (submitted) {
@@ -46,8 +65,8 @@ export function EmailCaptureForm({
 
   const buttonCls =
     variant === "dark"
-      ? "whitespace-nowrap border-none bg-transparent py-3.5 pl-[18px] font-mono text-[11px] uppercase tracking-[0.14em] text-[#fafafa]"
-      : "whitespace-nowrap border-none bg-transparent py-3.5 pl-[18px] font-mono text-[11px] uppercase tracking-[0.14em] text-fg";
+      ? "whitespace-nowrap border-none bg-transparent py-3.5 pl-[18px] font-mono text-[11px] uppercase tracking-[0.14em] text-[#fafafa] disabled:opacity-50"
+      : "whitespace-nowrap border-none bg-transparent py-3.5 pl-[18px] font-mono text-[11px] uppercase tracking-[0.14em] text-fg disabled:opacity-50";
 
   const lineCls =
     variant === "dark" ? "border-[rgb(250_250_250_/_0.4)]" : "border-line";
@@ -56,6 +75,11 @@ export function EmailCaptureForm({
     variant === "dark"
       ? "mt-3.5 block font-mono text-[10px] uppercase tracking-[0.14em] text-[rgb(250_250_250_/_0.45)]"
       : "mt-3.5 block font-mono text-[10px] uppercase tracking-[0.14em] text-fg-3";
+
+  const errorCls =
+    variant === "dark"
+      ? "mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#ff8a73]"
+      : "mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#c0392b]";
 
   return (
     <div className={className}>
@@ -69,13 +93,15 @@ export function EmailCaptureForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={pending}
           className={inputCls}
         />
-        <button type="submit" className={buttonCls}>
-          {cta}
+        <button type="submit" disabled={pending} className={buttonCls}>
+          {pending ? "Sending…" : cta}
         </button>
       </form>
       {tinyLabel && <span className={tinyCls}>{tinyLabel}</span>}
+      {error && <span className={errorCls}>{error}</span>}
     </div>
   );
 }

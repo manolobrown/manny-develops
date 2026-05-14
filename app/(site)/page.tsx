@@ -3,11 +3,17 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
+import { JsonLd } from "@/components/JsonLd";
 import { IMG } from "@/lib/content";
+import { metadataFor } from "@/lib/site";
+import { personAndBusinessSchema, websiteSchema, webPageSchema } from "@/lib/seo";
+
+export const metadata = metadataFor("/");
 
 export default function HomePage() {
   return (
     <div className="animate-page-fade">
+      <JsonLd data={[websiteSchema(), webPageSchema("/"), ...personAndBusinessSchema()]} />
       {/* Hero — full-bleed cinematic */}
       <section className="relative h-[calc(100vh-65px)] min-h-[640px] overflow-hidden">
         <Image
@@ -139,6 +145,7 @@ export default function HomePage() {
               no follow-up sequence.
             </p>
             <EmailCaptureForm
+              source="presets"
               variant="dark"
               cta="Send the pack ↗"
               tinyLabel=".xmp + .dng files · Lightroom CC, Classic & Mobile"
