@@ -78,6 +78,18 @@ export const ROUTES: RouteMeta[] = [
     description:
       "All my links in one place: bookings, free preset pack, portfolio, prints, and the journal.",
   },
+  {
+    path: "/privacy",
+    title: "Privacy Policy · Manny Develops",
+    description:
+      "What this site collects, why, and how to ask for it back. Plain-English summary, not legal advice.",
+  },
+  {
+    path: "/terms",
+    title: "Terms of Service · Manny Develops",
+    description:
+      "How I work with photography clients in plain English. Specific shoots are governed by their signed contracts.",
+  },
 ];
 
 export function routeFor(path: string): RouteMeta {

@@ -78,17 +78,16 @@ export function Footer() {
             hello@mannydevelops.com
           </a>
         </li>
-        <li>
-          <a href="#" className="font-sans text-[14px] text-fg hover:text-fg-2">
-            +1 (646) 555-0142
-          </a>
-        </li>
         <li className="font-sans text-[14px] text-fg">Studio · Manhattan, NYC</li>
         <li className="font-sans text-[13px] text-fg-3">Replies in 48 hrs</li>
       </FooterCol>
 
-      <div className="col-span-full mt-3 flex justify-between border-t border-line-soft pt-7 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-3">
+      <div className="col-span-full mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-line-soft pt-7 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-3">
         <span>© 2026 Manuel Peña</span>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link href="/privacy" className="hover:text-fg">Privacy</Link>
+          <Link href="/terms" className="hover:text-fg">Terms</Link>
+        </div>
         <span>Made in Manhattan</span>
         <span>v1.0</span>
       </div>

@@ -63,14 +63,52 @@ Copy `.env.example` → `.env.local` and fill in the values for the services you
 
 `SITE_URL` defaults to `https://mannydevelops.com` — override via `NEXT_PUBLIC_SITE_URL` for preview deploys.
 
-## Status — what isn't wired yet
+## Status — what's wired
 
-The site renders the full design (all 9 routes, light + dark, responsive). Forms render with full validation + success/error UI, but actual delivery is opt-in via the env vars above. Specifically:
+The site renders the full design (11 routes, light + dark, responsive). Phase 1 + Phase 2A + Phase 2C are live:
 
-- **Inquiry form** (`/contact`) — wired through a Server Action; delivers via Resend when `RESEND_API_KEY` is set. Without it, requests log to the dev console and show the success UI.
-- **Lead-magnet email capture** (Home + Services pricing PDF + Journal newsletter + sticky bottom strip) — all four post to `/api/subscribe`, which forwards to Kit when `KIT_API_KEY` + the appropriate `KIT_FORM_*_ID` are set.
-- **Scheduler** (`/contact`) — visual mock; needs a real Cal.com / Calendly embed (Phase 2A in the roadmap).
-- **Shop checkout** (`/shop`) — print + preset CTAs are visual; need Stripe Payment Links + a webhook for digital fulfillment (Phase 2B).
+- **Inquiry form** (`/contact`) — Server Action with zod validation + Cloudflare Turnstile, delivers via Resend
+- **Lead-magnet email capture** (4 surfaces) — posts to `/api/subscribe`, forwards to Kit (ConvertKit), source-tagged
+- **Scheduler** (`/contact`) — Cal.com embed across 3 event types, theme-matched
+- **OG images** — per-route dynamic generation via next/og
+- **SEO** — sitemap.xml, robots.txt, per-route metadata, JSON-LD structured data
+
+Outstanding:
+
+- **Shop checkout** (`/shop`) — print + preset CTAs are visual; need Stripe Payment Links + a webhook for digital fulfillment (Phase 2B)
+- **Editorial depth** — per-print case studies, FAQ, real long-form journal posts (Phase 4)
+
+## Pre-launch checklist
+
+Items that aren't code but must be true before the site goes public. Verify each before pointing DNS at this app.
+
+### Email infrastructure
+- [ ] **Resend domain verification** — `mannydevelops.com` shows ✅ on all DKIM/SPF/DMARC records in [Resend → Domains](https://resend.com/domains). Without this, inquiry-reply emails land in spam.
+- [ ] **Resend sending limit** — confirm the free tier ceiling is enough, or upgrade.
+- [ ] **Kit auto-responders** — each of the three Kit forms (Presets / Pricing guide / Newsletter) has an email template configured AND the asset URL points to a real file you've hosted somewhere:
+  - [ ] Preset zip file uploaded (Cloudflare R2 / S3 / `public/downloads`)
+  - [ ] Pricing-guide PDF uploaded
+  - [ ] Newsletter welcome email is conversational (or stays empty if you'd rather not auto-send anything)
+
+### Legal
+- [ ] **Privacy + Terms TODOs** filled in. Open `/privacy` and `/terms` — every red `TODO` block has been resolved (business entity type, hosting provider, retainer %, governing-law state, etc.)
+- [ ] **Privacy policy reviewed** by a lawyer if you can afford it. The current copy is a starting point, not legal advice.
+
+### Content
+- [ ] **Pricing confirmed** — Half Day $850 / Full Day $2,400 / Story $5,800 in `lib/content.ts` and the add-on table in `app/(site)/services/page.tsx` reflect your real rates.
+- [ ] **Real testimonials** — all 6 entries in `REVIEWS` (lib/content.ts) replaced with real client quotes; consider keeping `name` + `role` permission-checked.
+- [ ] **Real Reviews stats** — the four stats on `/reviews` (`5.0 / 38 reviews`, `87 shoots`, `94% rebookings`, `48hr replies`) are either accurate or removed.
+- [ ] **Press logos on About** — `Essex Squeeze × Nike`, `LFI Gallery — Leica`, `@street_mp_`, `Streets in Frame`, `Subway Stories` are all real placements. Remove ones that aren't.
+- [ ] **Google Reviews link on /reviews** — the "Open in Google" CTA currently points to `#`. Update with the real Google Business Profile review URL.
+- [ ] **Dev/photographer positioning** — decide whether `/about`'s `Photographer & web developer` section stays, softens to one sentence, or splits to its own micro-site.
+
+### Infrastructure
+- [ ] **Hosting picked + DNS pointed** — Vercel, Cloudflare Pages, etc. Update the privacy policy's hosting-provider TODO once decided.
+- [ ] **`NEXT_PUBLIC_SITE_URL`** set to the production URL on the host (defaults to `https://mannydevelops.com`).
+- [ ] **HTTPS** — host should auto-provision a TLS cert.
+- [ ] **`.env` vars set on production** — copy from `.env.local`, double-check that secret keys are production (not test) values for Stripe/Turnstile when those go live.
+- [ ] **Google Search Console** — submit `https://mannydevelops.com/sitemap.xml` after first deploy.
+- [ ] **Spam-test** the contact form from a fresh browser (no Turnstile cookies) — verify Turnstile challenge fires and a submission lands in inbox.
 
 ## Placeholder content flagged for review
 
