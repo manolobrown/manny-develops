@@ -119,6 +119,13 @@ export type Print = {
   priceFrom: number;
   collection: string;
   img: string;
+  /* Optional per-size Stripe Payment Link URLs. Key matches a string in `sizes`.
+   * When set, the print card's CTA links to the matching URL; when missing,
+   * falls back to an "Inquire" link to /contact. */
+  checkoutLinks?: Partial<Record<string, string>>;
+  /* Optional per-size price overrides (USD). When missing, the card shows
+   * `priceFrom` regardless of selected size. */
+  prices?: Partial<Record<string, number>>;
 };
 
 export const PRINTS: Print[] = [
@@ -184,6 +191,10 @@ export type PresetPack = {
   desc: string;
   cta: string;
   featured?: boolean;
+  /* Stripe Payment Link URL for the paid pack. When unset, the CTA falls back
+   * to an /contact "Inquire" link. Free packs ignore this and trigger the
+   * inline email-capture flow instead. */
+  checkoutLink?: string;
 };
 
 export const PRESET_PACKS: PresetPack[] = [

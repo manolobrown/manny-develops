@@ -73,10 +73,34 @@ The site renders the full design (11 routes, light + dark, responsive). Phase 1 
 - **OG images** — per-route dynamic generation via next/og
 - **SEO** — sitemap.xml, robots.txt, per-route metadata, JSON-LD structured data
 
+- **Shop checkout** (`/shop`) — interactive size picker + Stripe Payment Link wiring is in place. Each print/pack uses its `checkoutLink` URL when set, falls back to a `/contact` "Inquire" link otherwise. Configure links in `lib/content.ts` (see "Stripe Payment Links" below).
+- **Privacy + Terms** (`/privacy` and `/terms`) — boilerplate copy with TODOs flagged in red. Fill in the entity, retainer, governing-law state, and hosting provider before launch.
+
 Outstanding:
 
-- **Shop checkout** (`/shop`) — print + preset CTAs are visual; need Stripe Payment Links + a webhook for digital fulfillment (Phase 2B)
+- **Stripe webhook** — Phase 2B.2; needed only if you want automated digital fulfillment for the preset pack. For v1, Stripe's built-in receipt + the Payment Link's after-payment redirect handle delivery.
 - **Editorial depth** — per-print case studies, FAQ, real long-form journal posts (Phase 4)
+
+## Stripe Payment Links
+
+Each print SKU (one per size × edition) and the paid preset pack needs its own Stripe Payment Link. The shop UI uses these URLs directly — no Stripe API call from the site, no webhook required for v1.
+
+1. **Create a Payment Link** for each item in the Stripe dashboard: [dashboard.stripe.com/payment-links](https://dashboard.stripe.com/payment-links) → New
+   - Product name: copy from `lib/content.ts` (e.g., "Chevy, Mount Sinai · 11×14")
+   - Price: USD, one per size; match the `priceFrom` (or override per-size in `prices`)
+   - Image: upload the print photo (helps cart conversion)
+   - Shipping: set rates and zones (US, international)
+   - After payment: for physical prints, the default Stripe confirmation page is fine; for the preset pack, redirect to a custom URL where the customer can download the file
+2. **Paste the URL** into `lib/content.ts`:
+   ```ts
+   PRINTS[i].checkoutLinks = {
+     "11×14": "https://buy.stripe.com/test_xxx",
+     "16×20": "https://buy.stripe.com/test_yyy",
+   };
+   PRESET_PACKS[i].checkoutLink = "https://buy.stripe.com/test_zzz";
+   ```
+3. **Per-size price overrides** (optional): if any size price differs from `priceFrom`, set `PRINTS[i].prices = { "16×20": 145, ... }`. The card label switches from "From $X" to "$X" when a per-size price is set.
+4. **Partial rollout is safe**: a print without a `checkoutLink` for the selected size shows "Inquire ↗" linking to the contact form. Roll out one collection at a time.
 
 ## Pre-launch checklist
 

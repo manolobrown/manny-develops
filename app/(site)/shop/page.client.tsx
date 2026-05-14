@@ -1,15 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState, type CSSProperties } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Label } from "@/components/ui/Label";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 import { COLLECTIONS, PRINTS, PRESET_PACKS, PRESETS } from "@/lib/content";
 
 export function ShopPageClient() {
   const [filter, setFilter] = useState<string>("All");
   const filtered = filter === "All" ? PRINTS : PRINTS.filter((p) => p.collection === filter);
+  const [sizeByPrint, setSizeByPrint] = useState<Record<string, string>>(() =>
+    Object.fromEntries(PRINTS.map((p) => [p.id, p.sizes[0]])),
+  );
+  const [freeSamplerOpen, setFreeSamplerOpen] = useState(false);
 
   return (
     <div className="mx-auto w-full max-w-site px-(--spacing-gutter) animate-page-fade">
@@ -45,42 +51,73 @@ export function ShopPageClient() {
 
       {/* Print grid */}
       <section className="grid grid-cols-3 gap-x-6 gap-y-9 pb-16 pt-9 max-[880px]:grid-cols-2 max-[880px]:gap-x-4 max-[880px]:gap-y-6">
-        {filtered.map((p) => (
-          <article key={p.id} className="flex cursor-pointer flex-col gap-3">
-            <div className="group relative aspect-[4/5] overflow-hidden bg-bg-2">
-              <Image
-                src={p.img}
-                alt={p.title}
-                fill
-                sizes="(max-width: 880px) 50vw, 33vw"
-                className="object-cover transition-transform duration-[600ms] ease-[var(--ease-design)] group-hover:scale-[1.03]"
-              />
-            </div>
-            <div className="flex items-baseline justify-between font-mono text-[11px] uppercase tracking-[0.14em] text-fg-3">
-              <span>{p.id}</span>
-              <span>{p.edition}</span>
-            </div>
-            <div className="font-serif text-[22px] font-normal leading-[1.2] tracking-[-0.01em]">
-              <em className="italic">{p.title}.</em>
-            </div>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {p.sizes.map((s) => (
-                <span
-                  key={s}
-                  className="rounded-full border border-line-soft px-2 py-1 font-mono text-[10px] tracking-[0.12em] text-fg-2"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="font-mono text-[13px] text-fg">From ${p.priceFrom}</span>
-              <span className="border-b border-line pb-0.5 font-mono text-[11px]">
-                Add to cart ↗
-              </span>
-            </div>
-          </article>
-        ))}
+        {filtered.map((p) => {
+          const selectedSize = sizeByPrint[p.id] ?? p.sizes[0];
+          const checkoutUrl = p.checkoutLinks?.[selectedSize];
+          const price = p.prices?.[selectedSize] ?? p.priceFrom;
+          const priceLabel = p.prices?.[selectedSize] ? `$${price}` : `From $${price}`;
+          return (
+            <article key={p.id} className="flex flex-col gap-3">
+              <div className="group relative aspect-[4/5] overflow-hidden bg-bg-2">
+                <Image
+                  src={p.img}
+                  alt={p.title}
+                  fill
+                  sizes="(max-width: 880px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-[600ms] ease-[var(--ease-design)] group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className="flex items-baseline justify-between font-mono text-[11px] uppercase tracking-[0.14em] text-fg-3">
+                <span>{p.id}</span>
+                <span>{p.edition}</span>
+              </div>
+              <div className="font-serif text-[22px] font-normal leading-[1.2] tracking-[-0.01em]">
+                <em className="italic">{p.title}.</em>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`${p.title} size`}>
+                {p.sizes.map((s) => {
+                  const active = s === selectedSize;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setSizeByPrint((prev) => ({ ...prev, [p.id]: s }))}
+                      className={`rounded-full border px-2 py-1 font-mono text-[10px] tracking-[0.12em] transition-[background,color,border-color] duration-[240ms] ${
+                        active
+                          ? "border-fg bg-fg text-bg"
+                          : "border-line-soft text-fg-2 hover:border-line hover:text-fg"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <span className="font-mono text-[13px] text-fg">{priceLabel}</span>
+                {checkoutUrl ? (
+                  <a
+                    href={checkoutUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="border-b border-line pb-0.5 font-mono text-[11px] text-fg transition-opacity duration-[240ms] hover:opacity-80"
+                  >
+                    Buy {selectedSize} ↗
+                  </a>
+                ) : (
+                  <Link
+                    href="/contact"
+                    className="border-b border-line-soft pb-0.5 font-mono text-[11px] text-fg-2 transition-colors duration-[240ms] hover:border-line hover:text-fg"
+                  >
+                    Inquire ↗
+                  </Link>
+                )}
+              </div>
+            </article>
+          );
+        })}
       </section>
 
       {/* Preset section */}
@@ -109,6 +146,7 @@ export function ShopPageClient() {
         <div className="grid grid-cols-2 gap-5 pb-6 pt-12 max-[880px]:grid-cols-1">
           {PRESET_PACKS.map((pk) => {
             const featured = !!pk.featured;
+            const isFree = pk.price === 0;
             return (
               <div
                 key={pk.id}
@@ -119,7 +157,7 @@ export function ShopPageClient() {
                 <div className="flex items-baseline justify-between">
                   <span className="font-mono text-[11px] uppercase tracking-[0.14em] opacity-65">{pk.size}</span>
                   <span className="font-serif text-[52px] font-light leading-none tracking-[-0.025em]">
-                    {pk.price === 0 ? <em className="italic">Free</em> : `$${pk.price}`}
+                    {isFree ? <em className="italic">Free</em> : `$${pk.price}`}
                   </span>
                 </div>
                 <div className="font-serif text-[28px] font-normal leading-[1.1] tracking-[-0.01em]">
@@ -138,14 +176,49 @@ export function ShopPageClient() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  variant="primary"
-                  tone={featured ? "onDark" : "default"}
-                  fullWidth
-                  arrow
-                >
-                  {pk.cta}
-                </Button>
+
+                {/* CTA: free pack opens inline email capture; paid pack links to Stripe.
+                    Either pattern falls back to an /contact inquire link if not configured. */}
+                {isFree ? (
+                  freeSamplerOpen ? (
+                    <EmailCaptureForm
+                      source="presets"
+                      cta="Send the pack ↗"
+                      tinyLabel=".xmp + .dng files · Lightroom CC, Classic & Mobile"
+                    />
+                  ) : (
+                    <Button
+                      variant="primary"
+                      tone={featured ? "onDark" : "default"}
+                      fullWidth
+                      arrow
+                      onClick={() => setFreeSamplerOpen(true)}
+                    >
+                      {pk.cta}
+                    </Button>
+                  )
+                ) : pk.checkoutLink ? (
+                  <ButtonLink
+                    href={pk.checkoutLink}
+                    variant="primary"
+                    tone={featured ? "onDark" : "default"}
+                    fullWidth
+                    arrow
+                    external
+                  >
+                    {pk.cta}
+                  </ButtonLink>
+                ) : (
+                  <ButtonLink
+                    href="/contact"
+                    variant="primary"
+                    tone={featured ? "onDark" : "default"}
+                    fullWidth
+                    arrow
+                  >
+                    Inquire about this pack
+                  </ButtonLink>
+                )}
               </div>
             );
           })}
