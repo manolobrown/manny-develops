@@ -1,35 +1,56 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useTheme } from "next-themes";
+import Cal, { getCalApi } from "@calcom/embed-react";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Label } from "@/components/ui/Label";
 import { sendInquiry, type InquiryState } from "./actions";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const CAL_LINKS = {
+  Discovery: process.env.NEXT_PUBLIC_CAL_LINK_DISCOVERY ?? "manuel-pena-i7ohok/15min",
+  Wedding: process.env.NEXT_PUBLIC_CAL_LINK_WEDDING ?? "manuel-pena-i7ohok/30min",
+  Studio: process.env.NEXT_PUBLIC_CAL_LINK_STUDIO ?? "manuel-pena-i7ohok/45min",
+} as const;
 
 const SHOOT_TYPES = ["Wedding", "Portrait", "Family", "Commercial", "Editorial", "Other"];
-const TIME_SLOTS = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM"];
-const AVAIL_DAYS = [3, 5, 8, 10, 12, 15, 17, 19, 22, 24, 26];
 const CALL_TYPES = [
-  { id: "Discovery", name: "Discovery",      dur: "15 min · Free" },
+  { id: "Discovery", name: "Discovery",       dur: "15 min · Free" },
   { id: "Wedding",   name: "Wedding consult", dur: "30 min · Free" },
   { id: "Studio",    name: "Studio visit",    dur: "45 min · Manhattan" },
-];
+] as const;
+
+type CallTypeId = (typeof CALL_TYPES)[number]["id"];
 
 export function ContactPageClient() {
   const [shoot, setShoot] = useState("Wedding");
-  const [day, setDay] = useState(12);
-  const [time, setTime] = useState("2:00 PM");
-  const [callType, setCallType] = useState("Discovery");
+  const [callType, setCallType] = useState<CallTypeId>("Discovery");
   const [formState, formAction, pending] = useActionState<InquiryState, FormData>(
     sendInquiry,
     { status: "idle" },
   );
   const { resolvedTheme } = useTheme();
+  const calTheme = resolvedTheme === "dark" ? "dark" : "light";
+
+  // Configure the Cal.com embed UI to match the site's theme.
+  useEffect(() => {
+    (async () => {
+      try {
+        const cal = await getCalApi();
+        cal("ui", {
+          theme: calTheme,
+          hideEventTypeDetails: false,
+          layout: "month_view",
+        });
+      } catch (e) {
+        console.warn("[contact] Cal.com getCalApi failed", e);
+      }
+    })();
+  }, [calTheme]);
 
   return (
     <div className="mx-auto w-full max-w-site px-(--spacing-gutter) animate-page-fade">
@@ -200,96 +221,14 @@ export function ContactPageClient() {
               })}
             </div>
 
-            <div className="mb-4.5 flex items-center justify-between">
-              <h3 className="m-0 font-serif text-[32px] font-light leading-none tracking-[-0.01em]">
-                <em className="italic">May</em> 2026
-              </h3>
-              <div className="flex gap-1 font-mono text-[14px]">
-                <button
-                  aria-label="Previous month"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line-soft bg-transparent hover:border-line"
-                >
-                  ‹
-                </button>
-                <button
-                  aria-label="Next month"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line-soft bg-transparent hover:border-line"
-                >
-                  ›
-                </button>
-              </div>
+            <div className="overflow-hidden rounded-md border border-line-soft bg-bg">
+              <Cal
+                key={callType}
+                calLink={CAL_LINKS[callType]}
+                style={{ width: "100%", height: "640px", overflow: "auto" }}
+                config={{ layout: "month_view", theme: calTheme }}
+              />
             </div>
-
-            <div className="mb-2 grid grid-cols-7 gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-fg-3">
-              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                <span key={i} className="py-1.5 text-center">{d}</span>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: 35 }).map((_, i) => {
-                const d = i - 4;
-                const inMonth = d > 0 && d < 32;
-                const avail = inMonth && AVAIL_DAYS.includes(d);
-                const today = d === 7;
-                const selected = d === day;
-                const cls = [
-                  "aspect-square flex items-center justify-center rounded-full font-mono text-[13px] border transition-all duration-[240ms]",
-                  inMonth ? "text-fg" : "text-fg-3",
-                  selected
-                    ? "bg-fg text-bg border-fg"
-                    : today
-                    ? "bg-bg border-line font-semibold"
-                    : avail
-                    ? "border-line-soft cursor-pointer hover:border-line"
-                    : "border-transparent",
-                ].join(" ");
-                return (
-                  <button
-                    key={i}
-                    className={cls}
-                    onClick={() => avail && setDay(d)}
-                    disabled={!avail}
-                  >
-                    {inMonth ? d : ""}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-5.5 mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-2">
-              Tue · May {day} · available times
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {TIME_SLOTS.map((t) => {
-                const pressed = time === t;
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    aria-pressed={pressed}
-                    onClick={() => setTime(t)}
-                    className={`rounded-full border py-2.5 text-center font-mono text-[12px] tracking-[0.04em] transition-all duration-[240ms] ${
-                      pressed
-                        ? "border-fg bg-fg text-bg"
-                        : "border-line-soft text-fg hover:border-line"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-4.5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-line-soft bg-bg p-4">
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fg-3">You&rsquo;re booking</span>
-              <span className="font-serif text-[16px] italic tracking-[-0.005em]">
-                {CALL_TYPES.find((t) => t.id === callType)?.name} · Tue May {day} · {time}
-              </span>
-            </div>
-            <Button variant="primary" fullWidth arrow className="mt-4.5">
-              Confirm booking
-            </Button>
           </div>
         </div>
       </section>
